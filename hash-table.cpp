@@ -2,8 +2,15 @@
 //
 
 #include <iostream>
+#include <vector>
+#include <string>
+#define KKK 2
+
+//TODO переписать вторую хэш функцию под цикличную открытую адресацию;
 
 
+
+using namespace std;
 class Data{
 public:
     class PhoneNumber {
@@ -236,12 +243,15 @@ public:
     PhoneNumber ph;
     LFP lfp;
     CarNum cn;
+    int key;
     Data(int c, int n, std::string l, std::string f, std::string p, std::string fi, int ser, std::string sec) {
         ph = PhoneNumber(c, n);
         lfp = LFP(l, f, p);
         cn = CarNum(fi, ser, sec);
+        key = getKey();
     }
     Data() = default;
+    ~Data() = default;
     int getKey() {
         std::string lfps = lfp.lastName + lfp.firstName + lfp.patronymic;
         int key = 0;
@@ -309,7 +319,118 @@ public:
 
 };
 
+class HashTable {
+    
+    int size;
+    int busyNodes;
+    double resizeGreater = 0.7;
+    double resizeLower = 0.3;
+    struct Node {
+        bool isHere;
+        Data d;
+        Node() {
+            isHere = false;
+        }
+        Node(Data dtr) {
+            isHere = true;
+            d = dtr;
+        }
+        Node(int c, int n, std::string l, std::string f, std::string p, std::string fi, int ser, std::string sec) {
+            isHere = true;
+            d = Data(c, n, l, f, p, fi, ser, sec);
+        }
+        ~Node() = default;
+    };
+    vector <Node> nodes;
 
+    int hashFunction1(int key) {
+        return key % size;
+    }
+    int hashFunction2(int key, int k) {
+        return key + k;
+    }
+    void resize(double mulResize) {
+        vector<Node> newNodes(int(size * mulResize));
+        int pastSize = size;
+        size = int(size * mulResize);
+        busyNodes = 0;
+        std::swap(nodes, newNodes);
+        for (int i = 0; i < pastSize; i++) {
+            add(newNodes[i].d);
+        }
+        newNodes.clear();
+
+    }
+
+    void add(Data d) {
+        if (busyNodes + 1 >= int(resizeGreater * size)) {
+            resize(2);
+        }
+        int position = hashFunction1(d.key); // тут выбираю куда вставлять элемент
+        if (!nodes[position].isHere) {
+            nodes[position] = Node(d);
+            busyNodes++;
+        }
+        else {
+            int old_pos = hashFunction2(position, KKK);
+            while (nodes[position].isHere, position != old_pos) {
+                if (position >= size) {
+                    position = 0;
+                }
+                position = hashFunction2(position, KKK);
+                
+            }
+            nodes[position].d = d;
+            nodes[position].isHere = true;
+            busyNodes++;
+            /*if (position == size) {
+                position = 0;
+                while (nodes[position].isHere && position != hashFunction1(d.key)) {
+                    position = hashFunction2(position, KKK);
+                }
+                nodes[position].d = d;
+                nodes[position].isHere = true;
+                busyNodes++;
+            }
+            else {
+                nodes[position].d = d;
+                nodes[position].isHere = true;
+                busyNodes++;
+            }
+            */        
+        }
+    }
+    
+   
+public:
+    void add(int c, int n, std::string l, std::string f, std::string p, std::string fi, int ser, std::string sec) {
+        Data newEl = Data(c, n, l, f, p, fi, ser, sec);
+        add(newEl);
+    }
+    void print() {
+        int i = 0;
+        for (auto el : nodes) {
+            if (el.isHere)
+                cout << i << ". [" << el.isHere << "] " << el.d.lfp.lastName << " " << el.d.lfp.firstName << " " << el.d.lfp.patronymic << " " << el.d.cn.first << " " << el.d.cn.number << " " << el.d.cn.second << endl;
+            else
+                cout << i << ". [" << el.isHere << "]\n";
+            i++;
+        }
+    }
+    HashTable(int s) {
+        size = s;
+        for (int i = 0; i < size; i++) {
+            nodes.push_back(Node());
+        }
+        busyNodes = 0;
+    }
+    ~HashTable() = default;
+};
+
+
+
+
+/*
 int HashFunctionHorner(const std::string& s, int table_size, const int key)
 {
     int hash_result = 0;
@@ -478,12 +599,22 @@ public:
 
 
 
-
+*/
 
 
 int main()
 {
-    
+    HashTable ht = HashTable(8);
+    ht.print();
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.print();
+
 }
 
 // Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
