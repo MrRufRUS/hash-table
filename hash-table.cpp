@@ -346,37 +346,47 @@ class HashTable {
     int hashFunction1(int key) {
         return key % size;
     }
-    int hashFunction2(int key, int k) {
-        
+    int hashFunction2(int oldKey, int i, int k) {
+        //cout << "z " << key + i * k;
+        int key = (oldKey + i * k) % size;
+        return key;
+    }
+    int resolutionOfСollisions(int key, int k) {
         int oldKey = key;
-        while (nodes[key].isHere && key < (size - k)) {
-            key += k;
+        bool isFound = false;
+        for (int i = 0; i <= (size / k); i++) {
+            if(!isFound){
+                key = hashFunction2(oldKey, i, k);
+                
+                if (!nodes[key].isHere) {
+                    isFound = true;
+                }
+            }
+            //cout << key << " ";
         }
-        if(!nodes[key].isHere)
-            return key;
-        key = 0;
-        while (nodes[key].isHere && oldKey < (size - k)) {
-            key += k;
-        }
-        if(!nodes[key].isHere)
-            return key;
-        return -1;
+        //cout << endl;
+        key = (isFound) ? key : -1;
+        return key;
     }
     void resize(double mulResize) {
-        vector<Node> newNodes(int(size * mulResize));
+        int newSize = int(size * mulResize);
+        if (defaultSize >= newSize)
+            newSize = defaultSize;
+        vector<Node> newNodes(newSize);
         int pastSize = size;
-        size = int(size * mulResize);
+        size = newSize;
         busyNodes = 0;
         std::swap(nodes, newNodes); // новое становится старым, старое становится новым
         for (int i = 0; i < pastSize; i++) {
-            add(newNodes[i].d);
+            if(newNodes[i].isHere)
+                add(newNodes[i].d);
         }
         newNodes.clear();
 
     }
 
     void add(Data& d) {
-        if (busyNodes + 1 > int(resizeGreater * size)) {
+        if (busyNodes + 1 >= int(resizeGreater * size)) {
             resize(2);
         }
         int position = hashFunction1(d.key); // тут выбираю куда вставлять элемент
@@ -385,49 +395,83 @@ class HashTable {
             busyNodes++;
         }
         else {
-            int old_pos = hashFunction2(position, KKK);
-            cout << old_pos << endl;
-            if (old_pos >= 0) {
-            nodes[position].d = d;
-
-            nodes[position].isHere = true;
-            busyNodes++;
-            Node el = nodes[position];
-            }
-            else resize(2);
-            /*if (position == size) {
-                position = 0;
-                while (nodes[position].isHere && position != hashFunction1(d.key)) {
-                    position = hashFunction2(position, KKK);
-                }
+            position = resolutionOfСollisions(position, KKK);
+            if (position >= 0) {
                 nodes[position].d = d;
                 nodes[position].isHere = true;
                 busyNodes++;
             }
             else {
-                nodes[position].d = d;
-                nodes[position].isHere = true;
-                busyNodes++;
-            }
-            */        
+                resize(2);
+                add(d);
+            };   
         }
     }
-    
+    int find(int key, int k, Data& d) {
+        int oldKey = key;
+        bool isFound = false;
+        for (int i = 0; i < size / k; i++) {
+            if (!isFound) {
+                key = hashFunction2(oldKey, i, k);
+                if (nodes[key].isHere && nodes[key].d == d) {
+                    isFound = true;
+                }
+            }
+            //cout << key << " ";
+        }
+        //cout << endl;
+        key = (isFound) ? key : -1;
+        return key;
+    }
+    void remove(Data& d) {
+        if (busyNodes - 1 <= int(resizeLower * size)) {
+            resize(0.5);
+        }
+        int position = hashFunction1(d.key); // тут выбираю куда вставлять элемент
+        if (nodes[position].isHere && nodes[position].d == d) {
+            nodes[position] = Node();
+            busyNodes--;
+        }
+        else {
+            position = find(position, KKK, d);
+            if (position >= 0) {
+                nodes[position] = Node();
+                busyNodes--;
+            }
+            else {
+                cout << "Cannot find them\n";
+            };
+        }
+    }
    
 public:
     void add(int c, int n, std::string l, std::string f, std::string p, std::string fi, int ser, std::string sec) {
         Data newEl = Data(c, n, l, f, p, fi, ser, sec);
         add(newEl);
     }
+    void find(int c, int n, std::string l, std::string f, std::string p, std::string fi, int ser, std::string sec) {
+        Data findEl = Data(c, n, l, f, p, fi, ser, sec);
+        int position = hashFunction1(findEl.key);
+        position = find(position, KKK, findEl);
+        if (position >= 0) {
+            cout << "Element is on position: " << position << endl;
+        }
+    }
+    void remove(int c, int n, std::string l, std::string f, std::string p, std::string fi, int ser, std::string sec) {
+        Data remEl = Data(c, n, l, f, p, fi, ser, sec);
+        remove(remEl);
+    }
     void print() {
         int i = 0;
+        cout << "###########################\n";
         for (auto el : nodes) {
             if (el.isHere)
-                cout << i << ". [" << el.isHere << "] " << el.d.lfp.lastName << " " << el.d.lfp.firstName << " " << el.d.lfp.patronymic << " " << el.d.cn.first << " " << el.d.cn.number << " " << el.d.cn.second << endl;
+                cout << i << ". [" << el.isHere << "] "<< el.d.ph.code << " "<< el.d.ph.number << " " << el.d.lfp.lastName << " " << el.d.lfp.firstName << " " << el.d.lfp.patronymic << " " << el.d.cn.first << " " << el.d.cn.number << " " << el.d.cn.second << endl;
             else
                 cout << i << ". [" << el.isHere << "]\n";
             i++;
         }
+        cout << "###########################\n";
     }
     HashTable(int s) {
         size = s;
@@ -441,25 +485,35 @@ public:
 };
 
 
-
-
-
-
 int main()
 {
-    //HashTable ht = HashTable(8);
+    HashTable ht = HashTable(10);
     //ht.print();
-    //ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 665, "HL");
-    //ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 664, "HL");
-    //ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    //ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    //cout << "##############################\n";
-    //ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    //ht.print();
-    vector <int> f(5);
-    vector <int> s(10);
-    std::swap(f, s);
-    cout << f.size() << " " << s.size();
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 768, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.find(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.print();
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 665, "HL");
+    ht.print();
+    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 664, "HL");
+    ht.print();
+    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.print();
+    ht.~HashTable();
 }
 
 // Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
