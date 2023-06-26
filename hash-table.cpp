@@ -1,6 +1,6 @@
 ﻿// hash-table.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
 //
-
+//#include <bits/stdc++.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -320,7 +320,7 @@ public:
 };
 
 class HashTable {
-    
+    int defaultSize;
     int size;
     int busyNodes;
     double resizeGreater = 0.7;
@@ -347,14 +347,27 @@ class HashTable {
         return key % size;
     }
     int hashFunction2(int key, int k) {
-        return key + k;
+        
+        int oldKey = key;
+        while (nodes[key].isHere && key < (size - k)) {
+            key += k;
+        }
+        if(!nodes[key].isHere)
+            return key;
+        key = 0;
+        while (nodes[key].isHere && oldKey < (size - k)) {
+            key += k;
+        }
+        if(!nodes[key].isHere)
+            return key;
+        return -1;
     }
     void resize(double mulResize) {
         vector<Node> newNodes(int(size * mulResize));
         int pastSize = size;
         size = int(size * mulResize);
         busyNodes = 0;
-        std::swap(nodes, newNodes);
+        std::swap(nodes, newNodes); // новое становится старым, старое становится новым
         for (int i = 0; i < pastSize; i++) {
             add(newNodes[i].d);
         }
@@ -362,8 +375,8 @@ class HashTable {
 
     }
 
-    void add(Data d) {
-        if (busyNodes + 1 >= int(resizeGreater * size)) {
+    void add(Data& d) {
+        if (busyNodes + 1 > int(resizeGreater * size)) {
             resize(2);
         }
         int position = hashFunction1(d.key); // тут выбираю куда вставлять элемент
@@ -373,16 +386,15 @@ class HashTable {
         }
         else {
             int old_pos = hashFunction2(position, KKK);
-            while (nodes[position].isHere, position != old_pos) {
-                if (position >= size) {
-                    position = 0;
-                }
-                position = hashFunction2(position, KKK);
-                
-            }
+            cout << old_pos << endl;
+            if (old_pos >= 0) {
             nodes[position].d = d;
+
             nodes[position].isHere = true;
             busyNodes++;
+            Node el = nodes[position];
+            }
+            else resize(2);
             /*if (position == size) {
                 position = 0;
                 while (nodes[position].isHere && position != hashFunction1(d.key)) {
@@ -419,6 +431,7 @@ public:
     }
     HashTable(int s) {
         size = s;
+        defaultSize = s;
         for (int i = 0; i < size; i++) {
             nodes.push_back(Node());
         }
@@ -427,6 +440,38 @@ public:
     ~HashTable() = default;
 };
 
+
+
+
+
+
+int main()
+{
+    //HashTable ht = HashTable(8);
+    //ht.print();
+    //ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 665, "HL");
+    //ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 664, "HL");
+    //ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    //ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    //cout << "##############################\n";
+    //ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    //ht.print();
+    vector <int> f(5);
+    vector <int> s(10);
+    std::swap(f, s);
+    cout << f.size() << " " << s.size();
+}
+
+// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
+// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
+
+// Советы по началу работы 
+//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
+//   2. В окне Team Explorer можно подключиться к системе управления версиями.
+//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
+//   4. В окне "Список ошибок" можно просматривать ошибки.
+//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
+//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
 
 
 
@@ -600,30 +645,3 @@ public:
 
 
 */
-
-
-int main()
-{
-    HashTable ht = HashTable(8);
-    ht.print();
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.print();
-
-}
-
-// Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
-// Отладка программы: F5 или меню "Отладка" > "Запустить отладку"
-
-// Советы по началу работы 
-//   1. В окне обозревателя решений можно добавлять файлы и управлять ими.
-//   2. В окне Team Explorer можно подключиться к системе управления версиями.
-//   3. В окне "Выходные данные" можно просматривать выходные данные сборки и другие сообщения.
-//   4. В окне "Список ошибок" можно просматривать ошибки.
-//   5. Последовательно выберите пункты меню "Проект" > "Добавить новый элемент", чтобы создать файлы кода, или "Проект" > "Добавить существующий элемент", чтобы добавить в проект существующие файлы кода.
-//   6. Чтобы снова открыть этот проект позже, выберите пункты меню "Файл" > "Открыть" > "Проект" и выберите SLN-файл.
