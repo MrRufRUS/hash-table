@@ -330,6 +330,7 @@ class HashTable {
         Data d;
         Node() {
             isHere = false;
+            d = Data();
         }
         Node(Data dtr) {
             isHere = true;
@@ -351,24 +352,38 @@ class HashTable {
         int key = (oldKey + i * k) % size;
         return key;
     }
-    int resolutionOfСollisions(int key, int k) {
+    int resolutionOfСollisions(int key, int k, Data toAdd) {
         int oldKey = key;
         bool isFound = false;
-        for (int i = 0; i <= (size / k); i++) {
-            if(!isFound){
-                key = hashFunction2(oldKey, i, k);
-                
-                if (!nodes[key].isHere) {
-                    isFound = true;
-                }
+        int i = 0;
+        while (i <= (size / k) && !isFound) {
+            key = hashFunction2(oldKey, i, k);
+            if (nodes[key].d == toAdd && nodes[key].isHere)
+                return -2;
+            if (!nodes[key].isHere) {
+                isFound = true;
             }
+            i++;
             //cout << key << " ";
         }
         //cout << endl;
-        key = (isFound) ? key : -1;
-        return key;
+        if (isFound) {
+            int check = key;
+            oldKey = key;
+            i = 0;
+            while(i <= (size / k) && nodes[check].d != Data()){
+                check = hashFunction2(oldKey, i, k);
+                if (nodes[check].d == toAdd && nodes[check].isHere)
+                    return -2;
+                i++;
+            }
+            return key;
+        }
+        return -1;
     }
     void resize(double mulResize) {
+        if (size == defaultSize)
+            return;
         int newSize = int(size * mulResize);
         if (defaultSize >= newSize)
             newSize = defaultSize;
@@ -391,15 +406,23 @@ class HashTable {
         }
         int position = hashFunction1(d.key); // тут выбираю куда вставлять элемент
         if (!nodes[position].isHere) {
-            nodes[position] = Node(d);
-            busyNodes++;
+            int check = find(position, KKK, d);
+            if (check < 0) {
+                nodes[position] = Node(d);
+                busyNodes++;
+            }
+            else 
+                cout << "Cannot add same element\n";
         }
         else {
-            position = resolutionOfСollisions(position, KKK);
+            position = resolutionOfСollisions(position, KKK, d);
             if (position >= 0) {
                 nodes[position].d = d;
                 nodes[position].isHere = true;
                 busyNodes++;
+            }
+            else if (position == -2) {
+                cout << "Cannot add same element\n";
             }
             else {
                 resize(2);
@@ -410,18 +433,18 @@ class HashTable {
     int find(int key, int k, Data& d) {
         int oldKey = key;
         bool isFound = false;
-        for (int i = 0; i < size / k; i++) {
-            if (!isFound) {
-                key = hashFunction2(oldKey, i, k);
-                if (nodes[key].isHere && nodes[key].d == d) {
-                    isFound = true;
-                }
+        int i = 0;
+        while (i <= (size / k) && !isFound && nodes[key].d != Data()) {
+            //cout << key << " \n";
+            key = hashFunction2(oldKey, i, k);
+            cout << key << " \n";
+            if (nodes[key].isHere && nodes[key].d == d) {
+                return key;
             }
-            //cout << key << " ";
+            i++;
         }
         //cout << endl;
-        key = (isFound) ? key : -1;
-        return key;
+        return -1;
     }
     void remove(Data& d) {
         if (busyNodes - 1 <= int(resizeLower * size)) {
@@ -429,13 +452,13 @@ class HashTable {
         }
         int position = hashFunction1(d.key); // тут выбираю куда вставлять элемент
         if (nodes[position].isHere && nodes[position].d == d) {
-            nodes[position] = Node();
+            nodes[position].isHere = false;
             busyNodes--;
         }
         else {
             position = find(position, KKK, d);
             if (position >= 0) {
-                nodes[position] = Node();
+                nodes[position].isHere = false;
                 busyNodes--;
             }
             else {
@@ -465,10 +488,10 @@ public:
         int i = 0;
         cout << "###########################\n";
         for (auto el : nodes) {
-            if (el.isHere)
+            //if (el.isHere)
                 cout << i << ". [" << el.isHere << "] "<< el.d.ph.code << " "<< el.d.ph.number << " " << el.d.lfp.lastName << " " << el.d.lfp.firstName << " " << el.d.lfp.patronymic << " " << el.d.cn.first << " " << el.d.cn.number << " " << el.d.cn.second << endl;
-            else
-                cout << i << ". [" << el.isHere << "]\n";
+           // else
+             //   cout << i << ". [" << el.isHere << "]\n";
             i++;
         }
         cout << "###########################\n";
@@ -490,28 +513,14 @@ int main()
     HashTable ht = HashTable(10);
     //ht.print();
     ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.print();
+    ht.add(88, 798, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
     ht.add(88, 768, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.find(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.print();
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 665, "HL");
-    ht.print();
-    ht.add(88, 888, "RufTech", "Dark", "Lucifer", "T", 664, "HL");
     ht.print();
     ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
-    ht.remove(88, 888, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.remove(88, 768, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
+    ht.print();
+    ht.add(88, 798, "RufTech", "Dark", "Lucifer", "T", 666, "HL");
     ht.print();
     ht.~HashTable();
 }
