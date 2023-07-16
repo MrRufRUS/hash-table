@@ -437,7 +437,7 @@ class HashTable {
         while (i <= (size / k) && !isFound && nodes[key].d != Data()) {
             //cout << key << " \n";
             key = hashFunction2(oldKey, i, k);
-            cout << key << " \n";
+            //cout << key << " \n";
             if (nodes[key].isHere && nodes[key].d == d) {
                 return key;
             }
